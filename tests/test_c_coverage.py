@@ -144,6 +144,22 @@ def test_clang_without_profdata_reads_gcov_through_llvm_cov(monkeypatch):
     assert (tools.backend, tools.gcov, tools.reader) == ("gcov", ["/x/llvm-cov", "gcov"], "gcov")
 
 
+def test_lcov_never_gets_a_two_word_gcov_tool(monkeypatch):
+    monkeypatch.setattr(cc, "find_tool", lambda name, _c: {"llvm-cov": "/x/llvm-cov"}.get(name))
+    monkeypatch.setattr(cc.shutil, "which", lambda name: "/x/lcov" if name == "lcov" else None)
+    tools = cc.choose_toolchain("Clang", "/x/clang")
+    assert (tools.gcov, tools.reader) == (["/x/llvm-cov", "gcov"], "gcov")
+    monkeypatch.setattr(cc, "find_tool", lambda name, _c: {"gcov": "/x/gcov"}.get(name))
+    assert cc.choose_toolchain("GNU", "/x/gcc").reader == "lcov"
+
+
+def test_c_files_outside_every_project_are_named(tmp_path, capsys):
+    _write(tmp_path, "app/CMakeLists.txt", "project(app C)\n")
+    files = [_write(tmp_path, "app/a.c", ""), _write(tmp_path, "stray/b.c", "")]
+    assert cc.cmake_projects(tmp_path, files) == [(tmp_path / "app").resolve()]
+    assert "No CMake project owns b.c; they score 0%." in capsys.readouterr().err
+
+
 def test_gcc_uses_its_versioned_gcov(monkeypatch):
     _tools(monkeypatch, {"gcov-13": "/x/gcov-13", "gcov": "/x/gcov"})
     assert cc.choose_toolchain("GNU", "/x/gcc-13").gcov == ["/x/gcov-13"]

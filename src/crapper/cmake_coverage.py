@@ -101,12 +101,17 @@ def cmake_projects(root: Path, files: list[Path]) -> list[Path]:
 
     root = root.resolve()
     found: set[Path] = set()
+    orphans: list[str] = []
     for file in files:
         if Path(file).suffix not in _LANGUAGES:
             continue
         project = _project_of(Path(file).resolve(), root)
-        if project is not None:
+        if project is None:
+            orphans.append(Path(file).name)
+        else:
             found.add(project)
+    if orphans and found:
+        _warn(f"No CMake project owns {', '.join(sorted(orphans))}; they score 0%.")
     return sorted(found)
 
 
@@ -141,7 +146,7 @@ def configure_command(module: Path, build: Path, backend: str | None = None) -> 
 
 
 def build_command(build: Path) -> list[str]:
-    return ["cmake", "--build", str(build), "--parallel"]
+    return ["cmake", "--build", str(build), "--config", "Debug", "--parallel"]
 
 
 def ctest_command() -> list[str]:
@@ -203,10 +208,13 @@ def _clang_gcov(compiler: str | None) -> list[str] | None:
     return [found] if found else None
 
 
-def _gcov_reader() -> str:
+def _gcov_reader(gcov: list[str]) -> str:
+    """gcovr, else lcov, else gcov itself. lcov's --gcov-tool takes one word,
+    so `llvm-cov gcov` is read by gcov itself instead."""
+
     if shutil.which("gcovr"):
         return "gcovr"
-    if shutil.which("lcov"):
+    if shutil.which("lcov") and len(gcov) == 1:
         return "lcov"
     return "gcov"
 
@@ -231,7 +239,7 @@ def choose_toolchain(
     if gcov is None:
         _warn("No gcov or llvm-cov was found.")
         return None
-    return Toolchain("gcov", gcov=gcov, reader=_gcov_reader())
+    return Toolchain("gcov", gcov=gcov, reader=_gcov_reader(gcov))
 
 
 def _files_under(build: Path, suffix: str) -> list[Path]:
