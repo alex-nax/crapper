@@ -91,6 +91,23 @@ By default a run deletes the previous report for each language it is about to me
 
 A missing tool or a failed test run scores that language at 0% and still writes the snapshot. Pass `--coverage-command` to replace those defaults with one command of your own. `--no-coverage` is the run that leaves coverage and CRAP as N/A.
 
+## Offline use
+
+Grammars come from `tree-sitter-language-pack`. Since 1.8 it downloads them on first use into its cache directory; `TREE_SITTER_LANGUAGE_PACK_CACHE_DIR` moves that cache. To run with no network:
+
+```sh
+# Once, with network: wheels and grammars.
+pip download --only-binary=:all: -d wheels tree-sitter==0.26.0 tree-sitter-language-pack==1.22.1 'setuptools>=68'
+TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=$PWD/grammars python -c \
+  'import tree_sitter_language_pack as p; p.download(["c", "cpp"])'
+
+# Later, offline.
+pip install --no-index --find-links wheels -e .
+TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=$PWD/grammars QUALITY_TOOLS_OFFLINE=1 python -m crapper ...
+```
+
+With `QUALITY_TOOLS_OFFLINE=1` the tool never downloads. A grammar that is not in the cache stops the run with `crapper: tree-sitter grammar '<language>' is not in <cache> ...` and exit status 1. Without it, the tool downloads as before.
+
 ## Development
 
 ```bash

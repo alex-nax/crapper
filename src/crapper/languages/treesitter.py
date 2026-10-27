@@ -1,15 +1,36 @@
 """Shared tree-sitter helpers for Java, Go, TypeScript, Rust, and Python."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
+
+OFFLINE_ENV = "QUALITY_TOOLS_OFFLINE"
+
+
+class GrammarUnavailable(RuntimeError):
+    """A grammar is not on disk and the run is not allowed to download it."""
+
+
+def offline() -> bool:
+    return os.environ.get(OFFLINE_ENV, "") not in ("", "0")
 
 
 @lru_cache(maxsize=None)
 def parser_for(language: str):
-    from tree_sitter_language_pack import download, get_parser
+    import tree_sitter_language_pack as pack
 
-    download([language])
-    return get_parser(language)
+    if offline():
+        # get_parser downloads on a cache miss too, so check before calling it.
+        if language not in pack.downloaded_languages():
+            raise GrammarUnavailable(
+                f"tree-sitter grammar '{language}' is not in {pack.cache_dir()} "
+                f"and {OFFLINE_ENV} forbids downloading it. Download it once with "
+                "network access, or set TREE_SITTER_LANGUAGE_PACK_CACHE_DIR to a "
+                "directory that already holds it."
+            )
+        return pack.get_parser(language)
+    pack.download([language])
+    return pack.get_parser(language)
 
 
 def parse(source: str, language: str):

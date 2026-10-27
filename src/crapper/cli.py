@@ -19,6 +19,7 @@ from crapper.discover import (
     iter_source_files,
     language_of,
 )
+from crapper.languages.treesitter import GrammarUnavailable
 from crapper.metrics import write_metrics
 from crapper.report import format_report
 from crapper.runners import run_coverage
@@ -330,4 +331,9 @@ def run(argv: list[str] | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> None:
-    sys.exit(run(argv))
+    try:
+        status = run(argv)
+    except GrammarUnavailable as exc:
+        print(f"crapper: {exc}", file=sys.stderr)
+        status = 1
+    sys.exit(status)
