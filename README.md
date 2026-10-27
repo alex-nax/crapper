@@ -1,5 +1,7 @@
 # crapper
 
+> **Fork note (alex-nax/crapper, branch `c-cpp`).** Adds C and C++ support over upstream `unclebob/crapper`. The changes are one language module per tool plus tests and README text, kept small so they can be offered back as pull requests. Licence unchanged (0BSD).
+
 CRAP scores for Clojure, Java, Go, TypeScript, Rust, Python, C, and C++. One run detects the language of each source file, applies that language's complexity and coverage rules, and writes the snapshot [uml-viewer](https://github.com/unclebob/uml-viewer) already reads.
 
 The formula is the one from [crap4clj](https://github.com/unclebob/crap4clj), [crap4java](https://github.com/unclebob/crap4java), and [crap4go](https://github.com/unclebob/crap4go):
