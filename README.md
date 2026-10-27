@@ -1,6 +1,6 @@
 # crapper
 
-CRAP scores for Clojure, Java, Go, TypeScript, Rust, and Python. One run detects the language of each source file, applies that language's complexity and coverage rules, and writes the snapshot [uml-viewer](https://github.com/unclebob/uml-viewer) already reads.
+CRAP scores for Clojure, Java, Go, TypeScript, Rust, Python, C, and C++. One run detects the language of each source file, applies that language's complexity and coverage rules, and writes the snapshot [uml-viewer](https://github.com/unclebob/uml-viewer) already reads.
 
 The formula is the one from [crap4clj](https://github.com/unclebob/crap4clj), [crap4java](https://github.com/unclebob/crap4java), and [crap4go](https://github.com/unclebob/crap4go):
 
@@ -52,6 +52,8 @@ uml-viewer groups entries by `:namespace` and joins each operation on `:name`. `
 | TypeScript | the dotted module path, or `module.Class` | the function or method name |
 | Rust | `crate::module`, or `crate::module::Type` | the function or method name |
 | Python | the dotted module path, or `module.Class` | the function or method name |
+| C | the file's project-relative path without its extension (`src/render/gl`) | the function name |
+| C++ | `ns::Class`, or the file path for a global function | the function or method name, `add(int, int)` for an overload |
 
 Rename or move is a new entry. There is no identity matching across runs.
 
@@ -69,6 +71,8 @@ Rust counts `if`, loops, each `match` arm, `?`, and `&&` / `||`. `mod tests` is 
 
 Python counts `if`, `elif`, `for`, `while`, `except`, each `match` case, a comprehension filter, a conditional expression, and each `and` / `or`. Nested functions stay inside the enclosing function. Coverage is LCOV from `coverage.py`, running pytest when the project uses it and `unittest` otherwise. `coverage` and `pytest` are installed into the project's interpreter when they are missing.
 
+C and C++ (`.c` and `.h` are C; `.cc`, `.cpp`, `.cxx`, `.hpp`, `.hh`, and `.hxx` are C++) count `if`, `for` and range-`for`, `while`, `do`, each `case` label but not `default`, `?:`, `&&` / `||` (and `and` / `or`), and `catch`. Only a definition with a body is an entry: prototypes, member declarations, and `= default` / `= delete` are not. Preprocessor conditionals are not expanded and are not decisions; both sides of an `#if` are scored as written, and code a macro expands to is not seen. A lambda is its own entry, `function::lambda@<line>`, and its decisions are not charged to the enclosing function. C++ namespaces come from the enclosing namespaces and classes, and from the scope of an out-of-line definition (`int Widget::get()` is in `Widget`); anonymous namespaces add nothing. A C function, and a C++ function in the global namespace, is namespaced by its file path, so a `.c` file and its `.h` share one. When one file defines a name twice in one namespace, each entry gets its parameter types appended (`add(int, int)`, `add(double)`); overloads spread over different files are not told apart. A C++ header named `.h` is parsed as C and scores badly; name it `.hpp`. Coverage is not collected yet: C and C++ score 0% and the run says so, unless `--coverage-command` writes an LCOV report under `target/coverage/` (gcov via `lcov`/`gcovr`, or `llvm-cov export -format=lcov`).
+
 ## Coverage commands
 
 By default a run deletes the previous report for each language it is about to measure and regenerates it:
@@ -81,6 +85,7 @@ By default a run deletes the previous report for each language it is about to me
 | TypeScript | `npm run coverage`, or Vitest `--coverage`, or `npx c8 ... npm test` | `coverage/lcov.info` or `target/coverage/typescript/lcov.info` |
 | Rust | `cargo llvm-cov` or `cargo tarpaulin`, per Cargo package | `target/coverage/rust/lcov.info` |
 | Python | `coverage run` with pytest or unittest, then `coverage lcov` | `target/coverage/python/lcov.info` |
+| C, C++ | none yet; use `--coverage-command` | any LCOV under `target/coverage/` |
 
 A missing tool or a failed test run scores that language at 0% and still writes the snapshot. Pass `--coverage-command` to replace those defaults with one command of your own. `--no-coverage` is the run that leaves coverage and CRAP as N/A.
 

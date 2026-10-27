@@ -593,4 +593,9 @@ def run_coverage(root: Path, files: list[Path], command: str | None) -> int:
         _cover_python(root, files)
     if "rust" in languages:
         _cover_rust(root, files)
+    if languages & {"c", "cpp"}:
+        _warn(
+            "C and C++ coverage is not collected yet. Pass --coverage-command to "
+            "write an LCOV report; without one, C and C++ score 0%."
+        )
     return 0
