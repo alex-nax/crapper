@@ -169,12 +169,12 @@ def test_extensions_map_to_c_and_cpp():
     assert [language_of(f"x{ext}") for ext in cpp] == ["cpp"] * len(cpp)
 
 
-def test_c_coverage_is_announced_as_missing(tmp_path, capsys):
+def test_c_without_a_cmake_project_is_announced_as_skipped(tmp_path, capsys):
     source = tmp_path / "src" / "demo.c"
     source.parent.mkdir()
     source.write_text("int f(void) { return 0; }\n", encoding="utf-8")
     run_coverage(tmp_path, [source], None)
-    assert "C and C++ coverage is not collected yet" in capsys.readouterr().err
+    assert "No CMakeLists.txt with project(); skipping C and C++ coverage" in capsys.readouterr().err
 
 
 def test_c_without_coverage_scores_zero(tmp_path):

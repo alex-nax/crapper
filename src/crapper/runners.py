@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from crapper.cmake_coverage import cover_c
 from crapper.discover import is_test_file, language_of
 
 _MAVEN = [
@@ -70,7 +71,7 @@ def _clean_dir(path: Path) -> None:
         shutil.rmtree(path)
 
 
-_COVERAGE_DIRS = {"typescript", "rust", "go", "python"}
+_COVERAGE_DIRS = {"typescript", "rust", "go", "python", "c"}
 
 
 def _outside_language_dirs(coverage: Path, path: Path) -> bool:
@@ -594,8 +595,5 @@ def run_coverage(root: Path, files: list[Path], command: str | None) -> int:
     if "rust" in languages:
         _cover_rust(root, files)
     if languages & {"c", "cpp"}:
-        _warn(
-            "C and C++ coverage is not collected yet. Pass --coverage-command to "
-            "write an LCOV report; without one, C and C++ score 0%."
-        )
+        cover_c(root, files)
     return 0

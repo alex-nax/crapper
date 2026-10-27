@@ -76,7 +76,7 @@ Coverage, when it is produced:
   TypeScript   npm run coverage, Vitest's own LCOV, or c8 around npm test
   Rust         cargo llvm-cov, or cargo tarpaulin, in the nearest Cargo.toml
   Python       coverage.py LCOV, via pytest or unittest, per project
-  C, C++       not collected yet; LCOV from --coverage-command is read
+  C, C++       ctest in an instrumented CMake build under target/; llvm-cov or gcov LCOV
 
 uml-viewer joins .metrics/crap.edn on :namespace and :name.
   Clojure      the ns, and the defn name

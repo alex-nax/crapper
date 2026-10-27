@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.17)
+project(crapper_fixture C)
+enable_testing()
+add_library(calc STATIC src/calc.c)
+target_include_directories(calc PUBLIC src)
+add_executable(calc_test test/calc_test.c)
+target_link_libraries(calc_test PRIVATE calc)
+add_test(NAME calc_test COMMAND calc_test)
